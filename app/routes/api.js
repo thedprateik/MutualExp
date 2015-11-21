@@ -15,7 +15,7 @@ module.exports = function (app, express) {
 	apiRouter.get('/', function (req, res) {
 		res.send('I am dashbooard!');
 	});
-
+	
 	//-------------------------------------------------------------------------------
 	//Authenticate
 	//-------------------------------------------------------------------------------
@@ -216,6 +216,7 @@ module.exports = function (app, express) {
 			//userGroup.membersId = [membersPhone[0], membersPhone[1]];
 			
 			var i = 0;
+			var successCount = 0;
 			for (i = 0; i < membersPhone.length; i++) {
 				User.findOne({
 					phone: membersPhone[i]
@@ -230,24 +231,26 @@ module.exports = function (app, express) {
 						});
 
 					} else if (user) {
+						successCount += 1;
 						userGroup.membersId.push(user._id);
 						console.log(user._id);
 						validMembers = true;
-
+						
+						//it looks dirty, but it did'nt work otherwise
+						if (successCount == membersPhone.length) {
+							//save if all the members are valid
+							if (validMembers === true && i === membersPhone.length) {
+								console.log('reached here' + i);
+								userGroup.save(function (err) {
+									if (err) {
+										return res.send(err);
+									}
+									res.json({ message: 'UserGroup Added!' });
+								});
+							}
+						}
 					}
 				})
-					.then(function () {
-						//save if all the members are valid
-						if (validMembers === true && i === membersPhone.length) {
-							console.log('reached here' + i);
-							userGroup.save(function (err) {
-								if (err) {
-									return res.send(err);
-								}
-								res.json({ message: 'UserGroup Added!' });
-							});
-						}
-					})
 			}
 		})
 
